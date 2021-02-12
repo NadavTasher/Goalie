@@ -5,10 +5,10 @@ version: "3"
 services: 
 
     # Create template service
-    template:
+    goalie:
 
         # Select service image
-        image: nadavtasher/template
+        image: nadavtasher/goalie
 
         # Expose ports
         ports: 
@@ -19,9 +19,10 @@ services:
             # Persistent data volume
             - data:/opt
 
-            # Sources volumes
-            - ./sources/frontend/index.html:/project/frontend/index.html:ro
-            - ./sources/backend/application.mjs:/project/backend/application.mjs:ro
+        # Environment variables
+        environment:
+            - key=SecretTokenKey
+            - password=PasswordToken
 
 volumes:
     data:

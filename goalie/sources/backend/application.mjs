@@ -10,10 +10,10 @@ import { Server } from "./internal/server.mjs";
 let mServer = new Server(8000);
 
 // Import the routes
-import base from "./external/base.mjs";
+import routes from "./external/goalie.mjs";
 
 // Enable the routes
-mServer.insert("base", base);
+mServer.insertAll(routes);
 
 // Listen for requests
 mServer.listen();

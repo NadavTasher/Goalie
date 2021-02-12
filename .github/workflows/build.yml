@@ -46,7 +46,7 @@ jobs:
                     push: true
 
                     # What is out build context?
-                    file: template/Dockerfile
+                    file: goalie/Dockerfile
                     context: template
 
                     # What are our target platforms?

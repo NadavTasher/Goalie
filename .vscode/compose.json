@@ -1,0 +1,14 @@
+{
+  "version": "3",
+  "services": {
+    "goalie": {
+      "build": "goalie",
+      "ports": [
+        "8000:80"
+      ],
+      "environment": [
+        "password=eyJzYWx0IjoiNnVvdWVzNXQ2NzRrODNidzdvZWQ5OWRtbGhvZG9mN21zMWV0ejJyNDN6eTdxNDl0a2NyenVmdGJhMWloYnNsZSIsImhhc2giOiIwZDFiYTFmN2RlNWYxMzMyYmEyZmNkNTcxZjEwZWY2YzI2MGNhYjNjYjVlNTA0Y2E4YjM1ZTE2NjYxMDJjYzcxIn0="
+      ]
+    }
+  }
+}

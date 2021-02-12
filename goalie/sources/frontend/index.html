@@ -43,20 +43,170 @@
     <!-- Application stylesheet -->
     <style>
         :root {
-            --theme: #ffffff;
-            --passive: #333344;
-            --active: #777788;
-            --coaster: #ddddee;
+            --theme: #000000;
+            --passive: #bbbbbb;
+            --active: #ffffff;
+            --coaster: #111111;
         }
 
         body {
             max-width: 500px;
         }
+
+        * {
+            font-family: monospace !important;
+        }
     </style>
 
     <!-- Application script -->
     <script type="text/javascript">
-        window.addEventListener("load", function () { });
+
+        const DAY = (1000 * 60 * 60 * 24);
+        const MONTH = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        const EPOCH = (date) => Math.floor(date.getTime() / DAY);
+
+        window.addEventListener("load", async function () {
+            // Import modules
+            await Module.import("API", "UI", "External:Dialog");
+
+            // Change the view
+            if (localStorage.token) {
+                API.call("goalie", "fetch", {
+                    token: localStorage.token
+                }).then(
+                    (data) => {
+                        // Load current status
+                        let today = new Date();
+
+                        // Check whether date is defined
+                        if (EPOCH(today) in data) {
+                            if (data[EPOCH(today)]) {
+                                UI.write("description", "You reached your goal");
+                            } else {
+                                UI.write("description", "You didn't reach your goal");
+                            }
+                        } else {
+                            UI.write("description", "No status provided");
+                        }
+
+                        // Update click listener
+                        UI.find("update").addEventListener("click", () => {
+                            // Create dialog
+                            Dialog.confirm("Did you acheive your goal today?").then(
+                                () => {
+                                    API.call("goalie", "update", {
+                                        token: localStorage.token,
+                                        day: EPOCH(today),
+                                        status: true
+                                    }).then(
+                                        () => {
+                                            // Reload page
+                                            location.reload();
+                                        }
+                                    );
+                                }
+                            ).catch(
+                                () => {
+                                    API.call("goalie", "update", {
+                                        token: localStorage.token,
+                                        day: EPOCH(today),
+                                        status: false
+                                    }).then(
+                                        () => {
+                                            // Reload page
+                                            location.reload();
+                                        }
+                                    );
+                                }
+                            );
+                        });
+
+                        // Load months
+                        let date = new Date();
+                        date.setMonth(0, 1);
+
+                        // Create temporary month holder
+                        let monthIndex = 0;
+                        let goalDays = 0;
+                        let totalDays = 0;
+
+                        // Loop over days
+                        while (EPOCH(date) <= EPOCH(today)) {
+                            // Add a widget
+                            if (date.getMonth() !== monthIndex) {
+                                // Add the month to the calendar
+                                UI.find("calendar").appendChild(UI.populate("month-previous", {
+                                    month: MONTH[monthIndex],
+
+                                    goal: goalDays,
+                                    total: totalDays
+                                }));
+
+                                // Reset statistics
+                                goalDays = 0;
+                                totalDays = 0;
+                            }
+
+                            // Update the month index
+                            monthIndex = date.getMonth();
+
+                            // Add one to the day count
+                            totalDays += 1;
+
+                            // Check for progress
+                            if (EPOCH(date) in data)
+                                if (data[EPOCH(date)])
+                                    goalDays += 1;
+
+                            // Increment date
+                            date.setDate(date.getDate() + 1);
+                        }
+
+                        // Add the month to the calendar
+                        UI.find("calendar").appendChild(UI.populate("month-current", {
+                            month: MONTH[monthIndex],
+
+                            goal: goalDays,
+                            total: totalDays
+                        }));
+                    }
+                ).catch(
+                    (error) => {
+                        Dialog.alert(`An error has occured: ${error}`).then(
+                            () => {
+                                // Delete storage
+                                delete localStorage.token;
+                                // Reload page
+                                location.reload();
+                            }
+                        );
+                    }
+                )
+                UI.view("goalie", false);
+            } else {
+                // Update click listener
+                UI.find("continue").addEventListener("click", () => {
+                    API.call("goalie", "authenticate", {
+                        password: UI.read("password")
+                    }).then(
+                        (token) => {
+                            // Update storage
+                            localStorage.token = token;
+                            // Reload page
+                            location.reload();
+                        }
+                    ).catch(
+                        (error) => {
+                            Dialog.alert(`Authentication error: ${error}`);
+                        }
+                    );
+                });
+
+                // Change view
+                UI.view("authenticate", false);
+            }
+        });
     </script>
 
     <!-- App Title -->
@@ -66,20 +216,45 @@
     <noscript></noscript>
 
     <!-- Additional -->
+    <template id="month-previous">
+        <div style="opacity: 0.4;" row stretch>
+            <!-- Month name -->
+            <p small left>${month}</p>
+            <!-- Month progress -->
+            <p medium center>${goal} / ${total}</p>
+        </div>
+    </template>
+    <template id="month-current">
+        <div style="opacity: 1.0;" row stretch>
+            <!-- Month name -->
+            <p medium left>${month}</p>
+            <!-- Month progress -->
+            <p large center>${goal} / ${total}</p>
+        </div>
+    </template>
 </head>
 
 <body column>
-    <div id="authenticate">
-
+    <div id="loading">
+        <p large center>Loading...</p>
     </div>
-    <div id="home">
-        <div id="status" row>
-            <p large left>Today's progress: </p>
-            
+    <div id="authenticate" hidden>
+        <!-- Titles -->
+        <p large center>Welcome to Goalie</p>
+        <p small center>Please provide your password</p>
+        <!-- Password input -->
+        <input small left id="password" type="password" placeholder="Password" />
+        <!-- Submit button -->
+        <button small right id="continue">Continue</button>
+    </div>
+    <div id="goalie" hidden>
+        <div id="status" stretch row>
+            <!-- Status display -->
+            <p small left id="description">Loading...</p>
+            <!-- Update button -->
+            <button small center id="update">Update</button>
         </div>
-        <div id="calendar" column>
-
-        </div>
+        <div id="calendar" style="height: 80vh; justify-content: flex-start;" column></div>
     </div>
 </body>
 

@@ -1,5 +1,5 @@
 # Select the base image
-FROM nadavtasher/template:2021.02.12
+FROM nadavtasher/template:2021.02.13
 
 # Copy sources
 COPY sources/backend backend

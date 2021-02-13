@@ -50,7 +50,10 @@
         }
 
         body {
+            justify-content: flex-start;
             max-width: 500px;
+            min-height: 96vh;
+            padding: 2vh;
         }
 
         * {
@@ -61,14 +64,11 @@
     <!-- Application script -->
     <script type="text/javascript">
 
-        const DAY = (1000 * 60 * 60 * 24);
         const MONTH = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-        const EPOCH = (date) => Math.floor(date.getTime() / DAY);
 
         window.addEventListener("load", async function () {
             // Import modules
-            await Module.import("API", "UI", "External:Dialog");
+            await Module.import("API", "UI", "Extra", "External:Dialog");
 
             // Change the view
             if (localStorage.token) {
@@ -80,14 +80,14 @@
                         let today = new Date();
 
                         // Check whether date is defined
-                        if (EPOCH(today) in data) {
-                            if (data[EPOCH(today)]) {
-                                UI.write("description", "You reached your goal");
+                        if (today.getEpochDay() in data) {
+                            if (data[today.getEpochDay()]) {
+                                UI.write("description", "Goal acheived!");
                             } else {
-                                UI.write("description", "You didn't reach your goal");
+                                UI.write("description", "Goal not acheived.");
                             }
                         } else {
-                            UI.write("description", "No status provided");
+                            UI.write("description", "No status");
                         }
 
                         // Update click listener
@@ -97,7 +97,7 @@
                                 () => {
                                     API.call("goalie", "update", {
                                         token: localStorage.token,
-                                        day: EPOCH(today),
+                                        day: today.getEpochDay(),
                                         status: true
                                     }).then(
                                         () => {
@@ -110,7 +110,7 @@
                                 () => {
                                     API.call("goalie", "update", {
                                         token: localStorage.token,
-                                        day: EPOCH(today),
+                                        day: today.getEpochDay(),
                                         status: false
                                     }).then(
                                         () => {
@@ -132,13 +132,12 @@
                         let totalDays = 0;
 
                         // Loop over days
-                        while (EPOCH(date) <= EPOCH(today)) {
+                        while (date.getEpochDay() <= today.getEpochDay()) {
                             // Add a widget
                             if (date.getMonth() !== monthIndex) {
                                 // Add the month to the calendar
                                 UI.find("calendar").appendChild(UI.populate("month-previous", {
                                     month: MONTH[monthIndex],
-
                                     goal: goalDays,
                                     total: totalDays
                                 }));
@@ -155,8 +154,8 @@
                             totalDays += 1;
 
                             // Check for progress
-                            if (EPOCH(date) in data)
-                                if (data[EPOCH(date)])
+                            if (date.getEpochDay() in data)
+                                if (data[date.getEpochDay()])
                                     goalDays += 1;
 
                             // Increment date
@@ -166,7 +165,6 @@
                         // Add the month to the calendar
                         UI.find("calendar").appendChild(UI.populate("month-current", {
                             month: MONTH[monthIndex],
-
                             goal: goalDays,
                             total: totalDays
                         }));
@@ -254,7 +252,7 @@
             <!-- Update button -->
             <button small center id="update">Update</button>
         </div>
-        <div id="calendar" style="height: 80vh; justify-content: flex-start;" column></div>
+        <div id="calendar" column></div>
     </div>
 </body>
 

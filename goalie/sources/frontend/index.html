@@ -50,14 +50,20 @@
         }
 
         body {
-            justify-content: flex-start;
+            /* justify-content: flex-start; */
             max-width: 500px;
-            min-height: 96vh;
-            padding: 2vh;
+            /* min-height: 96vh; */
+            /* padding: 2vh; */
         }
 
         * {
             font-family: monospace !important;
+        }
+
+        #home {
+            justify-content: flex-start;
+            min-height: 96vh;
+            padding: 2vh;
         }
     </style>
 
@@ -181,28 +187,31 @@
                         );
                     }
                 )
-                UI.view("goalie", false);
+                UI.show("home");
             } else {
-                // Update click listener
-                UI.find("continue").addEventListener("click", () => {
-                    API.call("goalie", "authenticate", {
-                        password: UI.read("password")
-                    }).then(
-                        (token) => {
-                            // Update storage
-                            localStorage.token = token;
-                            // Reload page
-                            location.reload();
-                        }
-                    ).catch(
-                        (error) => {
-                            Dialog.alert(`Authentication error: ${error}`);
-                        }
-                    );
-                });
-
-                // Change view
-                UI.view("authenticate", false);
+                Dialog.prompt("Password").then(
+                    (password) => {
+                        API.call("goalie", "authenticate", {
+                            password: password
+                        }).then(
+                            (token) => {
+                                // Update storage
+                                localStorage.token = token;
+                                // Reload page
+                                location.reload();
+                            }
+                        ).catch(
+                            (error) => {
+                                Dialog.alert(`Authentication error: ${error}`);
+                            }
+                        );
+                    }
+                ).catch(
+                    () => {
+                        // Reload page
+                        location.reload();
+                    }
+                );
             }
         });
     </script>
@@ -233,19 +242,7 @@
 </head>
 
 <body column>
-    <div id="loading">
-        <p large center>Loading...</p>
-    </div>
-    <div id="authenticate" hidden>
-        <!-- Titles -->
-        <p large center>Welcome to Goalie</p>
-        <p small center>Please provide your password</p>
-        <!-- Password input -->
-        <input small left id="password" type="password" placeholder="Password" />
-        <!-- Submit button -->
-        <button small right id="continue">Continue</button>
-    </div>
-    <div id="goalie" hidden>
+    <div id="home">
         <div id="status" stretch row>
             <!-- Status display -->
             <p small left id="description">Loading...</p>
